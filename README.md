@@ -9,3 +9,9 @@ Using Xojo it was easy enough to convert these sheets into tabs of similarly loo
 ![Demo](Recording.gif)
 
 Only the Mac OS X x86 version has been tested. But considering the simplicity of the code I don't expect (m)any issues with the other versions. Do report any you may encounter! Thanks!
+
+## UPDATES
+
+Thanks to a friend in the CALM Discord community, I added a tab for a π attenuator.
+
+![PIAttenuatorTab](PIAttenuatorTab.png)
