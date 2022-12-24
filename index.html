@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LoRa Calculations</title>
+    <style type="text/css">
+    .form-style-1 {
+        list-style-type: none;
+    	margin: 10px auto;
+    	max-width: 1000px;
+    	padding: 20px 12px 10px 20px;
+    	font: 13px "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    	float: left;
+    	height: 180px;
+    }
+    .form-style-1 li {
+    	padding: 0;
+    	display: block;
+    	list-style: none;
+    	margin: 10px 0 0 0;
+    	width: 400px;
+    }
+    .form-style-1 label{
+    	margin:0 0 3px 0;
+    	padding:0px;
+    	display:block;
+    	font-weight: bold;
+    }
+    .form-style-1 input[type=text], 
+    .form-style-1 input[type=date],
+    .form-style-1 input[type=datetime],
+    .form-style-1 input[type=number],
+    .form-style-1 input[type=search],
+    .form-style-1 input[type=time],
+    .form-style-1 input[type=url],
+    .form-style-1 input[type=email],
+    textarea, 
+    select{
+    	box-sizing: border-box;
+    	-webkit-box-sizing: border-box;
+    	-moz-box-sizing: border-box;
+    	border:1px solid #BEBEBE;
+    	padding: 7px;
+    	margin:0px;
+    	-webkit-transition: all 0.30s ease-in-out;
+    	-moz-transition: all 0.30s ease-in-out;
+    	-ms-transition: all 0.30s ease-in-out;
+    	-o-transition: all 0.30s ease-in-out;
+    	outline: none;	
+    }
+    .form-style-1 input[type=text]:focus, 
+    .form-style-1 input[type=date]:focus,
+    .form-style-1 input[type=datetime]:focus,
+    .form-style-1 input[type=number]:focus,
+    .form-style-1 input[type=search]:focus,
+    .form-style-1 input[type=time]:focus,
+    .form-style-1 input[type=url]:focus,
+    .form-style-1 input[type=email]:focus,
+    .form-style-1 textarea:focus, 
+    .form-style-1 select:focus{
+    	-moz-box-shadow: 0 0 8px #88D5E9;
+    	-webkit-box-shadow: 0 0 8px #88D5E9;
+    	box-shadow: 0 0 8px #88D5E9;
+    	border: 1px solid #88D5E9;
+    }
+    .form-style-1 .field-divided{
+    	width: 49%;
+    }
+    
+    .form-style-1 .field-long{
+    	width: 100%;
+    }
+    .form-style-1 .field-select{
+    	width: 100%;
+    }
+    .form-style-1 .field-textarea{
+    	height: 100px;
+    }
+    .form-style-1 input[type=submit], .form-style-1 input[type=button]{
+    	background: #4B99AD;
+    	padding: 8px 15px 8px 15px;
+    	border: none;
+    	color: #fff;
+    }
+    .form-style-1 input[type=submit]:hover, .form-style-1 input[type=button]:hover{
+    	background: #4691A4;
+    	box-shadow:none;
+    	-moz-box-shadow:none;
+    	-webkit-box-shadow:none;
+    }
+    .form-style-1 .required{
+    	color:red;
+    }
+
+    .dropbtn {
+      background-color: #04AA6D;
+      color: white;
+      padding: 16px;
+      font-size: 16px;
+      border: none;
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      overflow: scroll;
+    }
+    .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .dropdown-content a:hover {background-color: #ddd;}
+    .dropdown:hover .dropdown-content {display: block;}
+    .dropdown:hover .dropbtn {background-color: #3e8e41;}
+    </style>
+
+    <script>
+    function refreshCarrierFrequency() {
+      var velocity = 300000000;
+      console.log("velocity", velocity);
+      var freq = parseInt(document.getElementById("Freq").value) * 1e6;
+      console.log("freq", freq);
+      var lambda = velocity / freq;
+      console.log("lambda", lambda);
+      document.getElementById("lambda").innerText = lambda;
+      document.getElementById("rLength").innerText = (lambda * 49.5).toFixed(2) + " cm";
+      document.getElementById("dLength").innerText = (lambda * 47.3).toFixed(2) + " cm";
+      document.getElementById("rdSpacing").innerText = (lambda * 12.5).toFixed(2) + " cm";
+      document.getElementById("drSpacing").innerText = (lambda * 12.5).toFixed(2) + " cm";
+    }
+    function refreshAntenna() {
+      var freq = parseFloat(document.getElementById("FreqAntenna").value);
+      var aLenFT = 468 / freq;
+      var aLenCM = aLenFT * 30.48;
+      document.getElementById("antennaLength").innerText = aLenFT.toFixed(2) + " ft / " + aLenCM.toFixed(2) + " cm";
+      aLenFT = aLenFT / 2.0;
+      aLenCM = aLenCM / 2.0;
+      document.getElementById("halfWave").innerText = aLenFT.toFixed(2) + " ft / " + aLenCM.toFixed(2) + " cm";
+    }
+    function refreshHorizon() {
+      var h = parseFloat(document.getElementById("height").value);
+      var R = 6365000;
+      var TRh = 2 * R * h;
+      var h2 = h * h;
+      var h22Rh = h2+TRh;
+      var distance = Math.sqrt(h22Rh);
+      var unit = " m";
+      if(distance > 1000) {
+        distance = distance / 1000.0;
+        unit = " km";
+      }
+      document.getElementById("horizon").innerText = distance.toFixed(2);
+      document.getElementById("horizonUnit").innerText = unit;
+    }
+    function setParameter(param, x, callFn) {
+      document.getElementById(param).value = x;
+      callFn();
+    }
+    function RefreshAirtime() {
+      var SF = parseInt(document.getElementById("SF").value);
+      var BW = parseFloat(document.getElementById("BW").value);
+      var CR = parseInt(document.getElementById("CR").value);
+      var CRC = document.getElementById("CRC").value;
+      if (CRC == "no") CRC = 0;
+      else if (CRC == "yes") CRC = 1;
+      else {
+        console.log("! CRC", CRC);
+        return;
+      }
+      var EH = document.getElementById("ExplicitHeader").value;
+      if (EH == "no") EH = 1;
+      else if (EH == "yes") EH = 0;
+      else {
+        console.log("! EH", EH);
+        return;
+      }
+      var LDR = document.getElementById("LowDRoptimize").value;
+      if (LDR == "no") LDR = 0;
+      else if (LDR == "yes") LDR = 1;
+      else {
+        console.log("! LDR", LDR);
+        return;
+      }
+      var PL = parseInt(document.getElementById("BytesToSend").value);
+      var PR = parseInt(document.getElementById("Preamble").value);
+      var Tsym = Math.pow(2, SF) / BW * 1000;
+      console.log("CRC =", CRC,"; EH =", EH, "; LDR =", LDR, "; PL =", PL, "; PR =", PR,
+      "; SF =", SF, "; BW =", BW, "; CR =", CR);
+      console.log("Tsym", Tsym);
+      var Tpreamble = (PR+4.25)*Tsym;
+      console.log("Tpreamble", Tpreamble);
+      var payloadSymbNb = PR + (Math.ceil((8*PL - 4*SF + 28 + 16*CRC - 20*EH)/(4*(SF - 2*LDR)))*CR);
+      console.log("payloadSymbNb", payloadSymbNb);
+      var Tpayload = payloadSymbNb * Tsym;
+      console.log("Tpayload", Tpayload);
+      Tpacket = Tpreamble + Tpayload;
+      console.log("Tpacket", Tpacket);
+      Tpacket = Tpacket / 1000;
+      var atUnit = " ms";
+      if(Tpacket>=1000) {
+        Tpacket = Tpacket / 1000;
+        atUnit = " s";
+      }
+      document.getElementById("Airtime").innerHTML = "Airtime: " + Tpacket.toFixed(3)+ atUnit;
+    }
+    function RefreshDataRate() {
+      var B2 = parseInt(document.getElementById("drSF").value);
+      var B3 = parseFloat(document.getElementById("drBW").value);
+      var D4 = parseInt(document.getElementById("drCR").value);
+      console.log("SF =", B2, "; BW =", B3, "; CR =", D4);
+      var result = B2*(B3/Math.pow(2,B2))*(4/D4)*1000;
+      result = result.toFixed(0).replace(/(\d)(\d\d\d)$/, "$1,$2");
+      document.getElementById("drResult").innerHTML = result + " bps";
+    }
+    </script>
+  </head>
+  <body>  
+    <form>
+    <ul class="form-style-1">
+    <H1>Yagi</H1>
+      <li>
+        <label>Carrier frequency <span class="required">*</span></label>
+        <input onChange = "refreshCarrierFrequency();"
+          type="text" id="Freq" class="field-divided" placeholder="470.000" value="470.000" /> MHz<br /><br />
+        <span>Lambda = </span><span id="lambda"></span><br />
+        <span>Reflector length = </span><span id="rLength"></span><br />
+        <span>Dipole length = </span><span id="dLength"></span><br />
+        <span>Reflector/dipole spacing = </span><span id="rdSpacing"></span><br />
+        <span>Dipole/director spacing = </span><span id="drSpacing"></span><br />
+      </li>
+    </ul>
+    </form>
+
+    <form>
+    <ul class="form-style-1" style="height: 110px">
+    <H1>Horizon</H1>
+      <li>
+        <label>Height in meters <span class="required">*</span></label>
+        <input onChange = "refreshHorizon();"
+          type="text" id="height" class="field-divided" placeholder="150" value="150" /> m<br /><br />
+      </li>
+      <span>Horizon = </span><span id="horizon"></span><span id="horizonUnit"></span><br />
+    </ul>
+    </form>
+    
+    <form>
+    <ul class="form-style-1">
+    <H1>Antenna Length</H1>
+      <li>
+        <label>Radio Frequency <span class="required">*</span></label>
+        <input onChange = "refreshAntenna();"
+          type="text" id="FreqAntenna" class="field-divided" placeholder="470.000" value="470.000" /> MHz<br /><br />
+        <span>Antenna Length = </span><span id="antennaLength"></span><br />
+        <span>Half Wave = </span><span id="halfWave"></span><br />
+      </li>
+    </ul>
+    </form><br clear="all"/>
+
+    <form>
+    <ul class="form-style-1" style="list-style-type: none;">
+    <H1>Data Rate</H1>
+      <li style="float: left; display:inline-block;">
+        <label>SF <span class="required">*</span></label>
+        <input onChange = "RefreshDataRate();" type="text" id="drSF" class="field-divided" placeholder="12" value="12" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content">
+            <a href="javascript:setParameter('drSF', 12, RefreshDataRate);">SF 12</a>
+            <a href="javascript:setParameter('drSF', 11, RefreshDataRate);">SF 11</a>
+            <a href="javascript:setParameter('drSF', 10, RefreshDataRate);">SF 10</a>
+            <a href="javascript:setParameter('drSF', 9, RefreshDataRate);">SF 9</a>
+            <a href="javascript:setParameter('drSF', 8, RefreshDataRate);">SF 8</a>
+            <a href="javascript:setParameter('drSF', 7, RefreshDataRate);">SF 7</a>
+          </div>
+        </div>
+      </li>
+      <li style="float: left; display:inline-block;">
+        <label>BW <span class="required">*</span></label>
+        <input onChange = "RefreshDataRate();" type="text" id="drBW" class="field-divided" placeholder="125" value="125" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" style="height: 250px;">
+            <a href="javascript:setParameter('drBW', 500, RefreshDataRate);">500 KHz</a>
+            <a href="javascript:setParameter('drBW', 250, RefreshDataRate);">250 KHz</a>
+            <a href="javascript:setParameter('drBW', 125, RefreshDataRate);">125 KHz</a>
+            <a href="javascript:setParameter('drBW', 62.5, RefreshDataRate);">62.5 KHz</a>
+            <a href="javascript:setParameter('drBW', 41.7, RefreshDataRate);">41.7 KHz</a>
+            <a href="javascript:setParameter('drBW', 31.25, RefreshDataRate);">31.25 KHz</a>
+            <a href="javascript:setParameter('drBW', 20.8, RefreshDataRate);">20.8 KHz</a>
+            <a href="javascript:setParameter('drBW', 15.6, RefreshDataRate);">15.6 KHz</a>
+            <a href="javascript:setParameter('drBW', 10.4, RefreshDataRate);">10.4 KHz</a>
+            <a href="javascript:setParameter('drBW', 7.8, RefreshDataRate);">7.8 KHz</a>
+          </div>
+        </div>
+      </li>
+      <br clear="all"/>
+      <li style="float: left; display:inline-block;">
+        <label>CR 4/ <span class="required">*</span></label>
+        <input onChange = "RefreshDataRate();" type="text" id="drCR" class="field-divided" placeholder="5" value="5" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content">
+            <a href="javascript:setParameter('drCR', 5, RefreshDataRate);">4/5</a>
+            <a href="javascript:setParameter('drCR', 6, RefreshDataRate);">4/6</a>
+            <a href="javascript:setParameter('drCR', 7, RefreshDataRate);">4/7</a>
+            <a href="javascript:setParameter('drCR', 8, RefreshDataRate);">4/8</a>
+          </div>
+        </div>
+      </li>
+      <h2 id="drResult"></h2>
+    </ul>
+    </form>
+
+    <form>
+    <ul class="form-style-1" style="list-style-type: none;">
+    <H1 id="Airtime">Airtime</H1><hr>
+      <li style="float: left; display:inline-block;">
+        <label>SF <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="SF" class="field-divided" placeholder="12" value="12" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" id="SFdropdown">
+            <a href="javascript:setParameter('SF', 12, RefreshAirtime);">SF 12</a>
+            <a href="javascript:setParameter('SF', 11, RefreshAirtime);">SF 11</a>
+            <a href="javascript:setParameter('SF', 10, RefreshAirtime);">SF 10</a>
+            <a href="javascript:setParameter('SF', 9, RefreshAirtime);">SF 9</a>
+            <a href="javascript:setParameter('SF', 8, RefreshAirtime);">SF 8</a>
+            <a href="javascript:setParameter('SF', 7, RefreshAirtime);">SF 7</a>
+          </div>
+        </div>
+      </li>
+      <li style="float: left; display:inline-block;">
+        <label>BW <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="BW" class="field-divided" placeholder="125" value="125" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" style="height: 250px;" id="BWdropdown">
+            <a href="javascript:setParameter('BW', 500, RefreshAirtime);">500 KHz</a>
+            <a href="javascript:setParameter('BW', 250, RefreshAirtime);">250 KHz</a>
+            <a href="javascript:setParameter('BW', 125, RefreshAirtime);">125 KHz</a>
+            <a href="javascript:setParameter('BW', 62.5, RefreshAirtime);">62.5 KHz</a>
+            <a href="javascript:setParameter('BW', 41.7, RefreshAirtime);">41.7 KHz</a>
+            <a href="javascript:setParameter('BW', 31.25, RefreshAirtime);">31.25 KHz</a>
+            <a href="javascript:setParameter('BW', 20.8, RefreshAirtime);">20.8 KHz</a>
+            <a href="javascript:setParameter('BW', 15.6, RefreshAirtime);">15.6 KHz</a>
+            <a href="javascript:setParameter('BW', 10.4, RefreshAirtime);">10.4 KHz</a>
+            <a href="javascript:setParameter('BW', 7.8, RefreshAirtime);">7.8 KHz</a>
+          </div>
+        </div>
+      </li>
+      <br clear="all"/>
+      <li style="float: left; display:inline-block;">
+        <label>CR 4/ <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="CR" class="field-divided" placeholder="5" value="5" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" id="CRdropdown">
+            <a href="javascript:setParameter('CR', 5, RefreshAirtime);">4/5</a>
+            <a href="javascript:setParameter('CR', 6, RefreshAirtime);">4/6</a>
+            <a href="javascript:setParameter('CR', 7, RefreshAirtime);">4/7</a>
+            <a href="javascript:setParameter('CR', 8, RefreshAirtime);">4/8</a>
+          </div>
+        </div>
+      </li>
+      <li style="float: left; display:inline-block;">
+        <label>CRC enabled <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="CRC" class="field-divided" placeholder="no" value="no" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" id="CRCdropdown">
+            <a href="javascript:setParameter('CRC', 'no', RefreshAirtime);">no</a>
+            <a href="javascript:setParameter('CRC', 'yes', RefreshAirtime);">yes</a>
+          </div>
+        </div>
+      </li>
+      <br clear="all"/>
+      <li style="float: left; display:inline-block;">
+        <label>Explicit Header <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="ExplicitHeader" class="field-divided" placeholder="no" value="no" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" id="ExplicitHeaderdropdown">
+            <a href="javascript:setParameter('ExplicitHeader', 'yes', RefreshAirtime);">yes</a>
+            <a href="javascript:setParameter('ExplicitHeader', 'no', RefreshAirtime);">no</a>
+          </div>
+        </div>
+      </li>
+      <li style="float: left; display:inline-block;">
+        <label>Low DR optimize <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="LowDRoptimize" class="field-divided" placeholder="no" value="no" />
+        <div class="dropdown">
+          <button class="dropbtn">Select</button>
+          <div class="dropdown-content" id="LowDRoptimizedropdown">
+            <a href="javascript:setParameter('LowDRoptimize', 'no', RefreshAirtime);">no</a>
+            <a href="javascript:setParameter('LowDRoptimize', 'yes', RefreshAirtime);">yes</a>
+          </div>
+        </div>
+      </li>
+      <br /><br />
+      <li style="float: left; display:inline-block;">
+        <label>Bytes to send <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="BytesToSend" class="field-divided" placeholder="11" value="11" />
+      </li>
+      <li style="float: left; display:inline-block;">
+        <label>Preamble in bytes <span class="required">*</span></label>
+        <input onChange = "RefreshAirtime();" type="text" id="Preamble" class="field-divided" placeholder="8" value="8" />
+      </li>
+      <br clear="all" />
+      <br clear="all" />
+      <hr>
+    </ul>
+    </form><br clear="all" />
+
+    <script>
+    refreshCarrierFrequency();
+    refreshAntenna();
+    refreshHorizon();
+    RefreshAirtime();
+    RefreshDataRate();
+    </script>
+  </body>
+</html>
