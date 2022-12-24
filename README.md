@@ -19,3 +19,7 @@ Thanks to a friend in the CALM Discord community, I added a tab for a π attenua
 Thanks to a user Puzzled Pancake in the Meshtastic Discord, I added calculations for the Link Budget Data Rate tab.
 
 ![LinkBudget](LinkBudget.png)
+
+Added, thanks to the same friend, a solver: given a target Resistance Rc, it takes pairs in the e12, e24, e48 series, and gets you matching pairs within 5%.
+
+![Solver](Solver.png)
