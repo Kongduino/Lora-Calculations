@@ -12,14 +12,23 @@ Only the Mac OS X x86 version has been tested. But considering the simplicity of
 
 ## UPDATES
 
+### Pi attenuator
 Thanks to a friend in the CALM Discord community, I added a tab for a π attenuator.
 
 ![PIAttenuatorTab](PIAttenuatorTab.png)
 
-Thanks to a user Puzzled Pancake in the Meshtastic Discord, I added calculations for the Link Budget Data Rate tab.
+### Link Budget
+Thanks to user Puzzled Pancake in the Meshtastic Discord, I added calculations for the Link Budget Data Rate tab.
 
 ![LinkBudget](LinkBudget.png)
 
-Added, thanks to the same friend, a solver: given a target Resistance Rc, it takes pairs in the e12, e24, e48 series, and gets you matching pairs within 5%.
+### Resistance Solver
+Added, thanks to the same friend in the CALM Discord, a resistance solver: given a target resistance, it takes 3 resistances Ra, Rb and Rc in the e12, e24, e48 series, and gets you matching sets within a tolerance you choose, 5% by default. The Solver gets its own tab, while the Voltage Divider and π Attenuator tabs get buttons to solve their own R1 and R2 resistances. The top 10 matches are displayed.
 
-![Solver](Solver.png)
+![Solver](Solver_0.png)
+
+![Solver](Solver_1.png)
+
+![Solver](Solver_2.png)
+
+
